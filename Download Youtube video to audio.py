@@ -157,7 +157,7 @@ def create_playlist_folder(base_download_folder):
 if __name__ == "__main__":
     ffmpeg_path = install_dependencies()  # This will install dependencies and FFmpeg
     
-    download_folder = r"C:\Users\Soyeb\Downloads\RECORD\mp3"
+    download_folder = r"Your Download Directory"
 
     print(f"\n{Fore.CYAN}Choose download type:")
     print(f"{Fore.YELLOW}1. Download Single Video")
