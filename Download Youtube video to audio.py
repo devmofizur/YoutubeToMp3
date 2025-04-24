@@ -70,55 +70,72 @@ def download_youtube_as_mp3(video_url, download_folder, ffmpeg_path):
         if not os.path.exists(download_folder):
             os.makedirs(download_folder)
 
+        ffmpeg_path = find_ffmpeg_bin()
+        if ffmpeg_path is None:
+            return False  # Can't proceed without ffmpeg
+
         ydl_opts = {
-            'format': 'bestaudio/best',  # You can also specify the video format if needed
-            'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),  # Template for output file names
+            'format': 'bestaudio/best',
+            'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),
             'quiet': True,
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '320',
+            }],
             'no_warnings': True,
             'ignoreerrors': True,
-            'ffmpeg_location': ffmpeg_path  # Pass the ffmpeg location here (if needed)
+            'ffmpeg_location': ffmpeg_path
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            result = ydl.download([video_url])
-            
-            if result == 0:  # If download is successful
-                # Get the latest downloaded file (just the most recently created file)
-                downloaded_files = os.listdir(download_folder)
-                if downloaded_files:
-                    latest_file = max([f for f in downloaded_files if os.path.isfile(os.path.join(download_folder, f))], key=lambda f: os.path.getctime(os.path.join(download_folder, f)))
-                    
-                    # Remove the existing extension and add ".mp3"
-                    base_name = os.path.splitext(latest_file)[0]
-                    new_file_name = base_name + ".mp3"
-                    
-                    # Rename the file to .mp3
-                    os.rename(os.path.join(download_folder, latest_file), os.path.join(download_folder, new_file_name))
-                    print(f"{Fore.GREEN}Renamed {latest_file} to {new_file_name}")
+            ydl.download([video_url])
 
-                print(f"{Fore.GREEN}Downloaded: {video_url}")
-                return True  # Return success
-            else:
-                return False  # Return failure
-    except Exception as e:
-        print(f"{Fore.RED}Error downloading {video_url}: {e}")
-        return False
+        return True  # Success
+    except Exception:
+        return False  # Failure
+
+
+def extract_video_links_from_playlist(playlist_url):
+    """Extract individual video URLs from a playlist"""
+    try:
+        ydl_opts = {
+            'quiet': True,
+            'extract_flat': True,
+            'force_generic_extractor': True,
+            'no_warnings': True,
+            'ignoreerrors': True,
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(playlist_url, download=False)
+            entries = info_dict.get('entries', [])
+            video_urls = [entry['url'] for entry in entries if 'url' in entry]
+            return video_urls
+    except Exception:
+        return []
 
 
 def download_batch(links, download_folder, ffmpeg_path):
-    completed, skipped = 0, 0
-    total = len(links)
+    all_links = []
 
-    with tqdm(total=total, desc="Downloading", unit="video", leave=True) as pbar:
-        for link in links:
-            link = link.strip()
-            pbar.set_postfix_str(f"[{completed}/{total}] (Skipped: {skipped})")
-            success = download_youtube_as_mp3(link, download_folder, ffmpeg_path)
+    # If it's a single playlist URL, extract actual video links
+    if len(links) == 1 and "playlist" in links[0]:
+        all_links = extract_video_links_from_playlist(links[0])
+    else:
+        all_links = links
+
+    completed, skipped = 0, 0
+    total = len(all_links)
+
+    with tqdm(total=total, desc="Downloading", unit="video", ncols=80) as pbar:
+        for idx, link in enumerate(all_links, 1):
+            success = download_youtube_as_mp3(link.strip(), download_folder, ffmpeg_path)
             if success:
                 completed += 1
             else:
                 skipped += 1
-            pbar.set_postfix_str(f"[{completed}/{total}] (Skipped: {skipped})")
+
+            pbar.set_postfix_str(f"Complete : {completed} | Skip : {skipped}")
             pbar.update(1)
 
     input(f"{Fore.CYAN}Downloads complete. Press Enter to exit...")
@@ -140,7 +157,7 @@ def create_playlist_folder(base_download_folder):
 if __name__ == "__main__":
     ffmpeg_path = install_dependencies()  # This will install dependencies and FFmpeg
     
-    download_folder = r"Your download folder path"
+    download_folder = r"C:\Users\Soyeb\Downloads\RECORD\mp3"
 
     print(f"\n{Fore.CYAN}Choose download type:")
     print(f"{Fore.YELLOW}1. Download Single Video")
