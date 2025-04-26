@@ -116,6 +116,7 @@ def extract_video_links_from_playlist(playlist_url):
 
 
 def download_batch(links, download_folder, ffmpeg_path):
+    print(f"Total Video : {links}")
     all_links = []
 
     # If it's a single playlist URL, extract actual video links
@@ -126,7 +127,7 @@ def download_batch(links, download_folder, ffmpeg_path):
 
     completed, skipped = 0, 0
     total = len(all_links)
-
+    
     with tqdm(total=total, desc="Downloading", unit="video", ncols=80) as pbar:
         for idx, link in enumerate(all_links, 1):
             success = download_youtube_as_mp3(link.strip(), download_folder, ffmpeg_path)
@@ -157,7 +158,7 @@ def create_playlist_folder(base_download_folder):
 if __name__ == "__main__":
     ffmpeg_path = install_dependencies()  # This will install dependencies and FFmpeg
     
-    download_folder = r"Your Download Directory"
+    download_folder = r"C:\Users\Soyeb\Downloads\RECORD\mp3"
 
     print(f"\n{Fore.CYAN}Choose download type:")
     print(f"{Fore.YELLOW}1. Download Single Video")
