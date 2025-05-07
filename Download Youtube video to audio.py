@@ -51,7 +51,7 @@ def install_ffmpeg():
 def install_dependencies():
     """Install required Python packages and FFmpeg."""
     print(f"{Fore.CYAN}Checking dependencies...")
-    install_package("yt-dlp")
+    install_package("yt_dlp")
     install_package("tqdm")
     ffmpeg_path = install_ffmpeg()  # Ensure FFmpeg is installed and return its path
     return ffmpeg_path
