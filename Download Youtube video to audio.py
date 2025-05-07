@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import sys
 import urllib.request
@@ -57,12 +58,16 @@ def install_dependencies():
 
 
 def find_ffmpeg_bin():
-    """Locate ffmpeg.exe binary."""
-    ffmpeg_base = os.path.join(os.getcwd(), "ffmpeg")
-    for root, dirs, files in os.walk(ffmpeg_base):
-        if "ffmpeg.exe" in files:
-            return os.path.join(root, "ffmpeg.exe")
-    return None
+    """Locate ffmpeg.exe in the global system PATH."""
+    # Search for ffmpeg in directories listed in the system's PATH environment variable
+    ffmpeg_bin = shutil.which("ffmpeg")
+
+    if ffmpeg_bin:
+        print(f"Found ffmpeg.exe at: {ffmpeg_bin}")  # Debugging print statement
+        return ffmpeg_bin
+    else:
+        print("ffmpeg.exe not found in global PATH.")
+        return None
 
 
 def download_youtube_as_mp3(video_url, download_folder, ffmpeg_path):
@@ -158,7 +163,8 @@ def create_playlist_folder(base_download_folder):
 if __name__ == "__main__":
     ffmpeg_path = install_dependencies()  # This will install dependencies and FFmpeg
     
-    download_folder = r"C:\Users\Soyeb\Downloads\RECORD\mp3"
+    current_path = os.getcwd()
+    download_folder = os.path.join(current_path, "mp3")
 
     print(f"\n{Fore.CYAN}Choose download type:")
     print(f"{Fore.YELLOW}1. Download Single Video")
